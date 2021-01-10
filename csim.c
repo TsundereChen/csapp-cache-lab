@@ -1,8 +1,8 @@
 #include "cachelab.h"
-#include <stdint.h>
 #include <getopt.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -13,19 +13,19 @@ typedef struct cacheData {
   uint64_t tag;
 } cacheData;
 
-cacheData** cacheTable;
+cacheData **cacheTable;
 
 bool verbose = false;
 int setIndexBit;
 int linePerSet;
 int blockOffsetBit;
-FILE* traceFile = NULL;
+FILE *traceFile = NULL;
 
 int hits = 0;
 int misses = 0;
 int evictions = 0;
 
-void parseArg(int argc, char* argv[]);
+void parseArg(int argc, char *argv[]);
 int simulator(void);
 void checkCache(uint64_t address);
 
@@ -95,30 +95,29 @@ int simulator(void) {
   uint64_t addr;
   int size;
 
-  while(fgets(buffer, sizeof(buffer), traceFile) != NULL){
-      int returnValue;
-      if(buffer[0] == 'I'){
-          // Ignoring instruction load operation
-          continue;
+  while (fgets(buffer, sizeof(buffer), traceFile) != NULL) {
+    int returnValue;
+    if (buffer[0] == 'I') {
+      // Ignoring instruction load operation
+      continue;
+    } else {
+      sscanf(buffer, " %c %lx,%d", &operation, &addr, &size);
+      switch (operation) {
+      case 'S':
+        checkCache(addr);
+        break;
+      case 'L':
+        checkCache(addr);
+        break;
+      case 'M':
+        checkCache(addr);
+        hits++;
+        break;
       }
-      else{
-        sscanf(buffer, " %c %lx,%d", &operation, &addr, &size);
-        switch(operation){
-            case 'S':
-                checkCache(addr);
-                break;
-            case 'L':
-                checkCache(addr);
-                break;
-            case 'M':
-                checkCache(addr);
-                hits++;
-                break;
-        }
-      }
+    }
   }
-  for(int i = 0; i < setIndexBit; i++)
-      free(cacheTable[i]);
+  for (int i = 0; i < setIndexBit; i++)
+    free(cacheTable[i]);
   free(cacheTable);
   fclose(traceFile);
   return 0;
