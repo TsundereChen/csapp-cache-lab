@@ -27,7 +27,7 @@ int evictions = 0;
 
 void parseArg(int argc, char *argv[]);
 int simulator(void);
-void checkCache(uint64_t address);
+int checkCache(uint64_t address);
 
 int main(int argc, char *argv[]) {
   parseArg(argc, argv);
@@ -103,18 +103,32 @@ int simulator(void) {
       // Ignoring instruction load operation
       continue;
     } else {
+      int ret = 0;
       sscanf(buffer, " %c %lx,%d", &operation, &addr, &size);
       switch (operation) {
       case 'S':
-        checkCache(addr);
+        ret = checkCache(addr);
         break;
       case 'L':
-        checkCache(addr);
+        ret = checkCache(addr);
         break;
       case 'M':
-        checkCache(addr);
+        ret = checkCache(addr);
         hits++;
         break;
+      }
+      if (verbose) {
+        switch (ret) {
+        case 0:
+          printf("%c %lx,%d HIT.\n", operation, addr, size);
+          break;
+        case 1:
+          printf("%c %lx,%d MISS.\n", operation, addr, size);
+          break;
+        case 2:
+          printf("%c %lx,%d EVICTION.\n", operation, addr, size);
+          break;
+        }
       }
     }
   }
@@ -125,4 +139,37 @@ int simulator(void) {
   return 0;
 };
 
-void checkCache(uint64_t address) {}
+int checkCache(uint64_t address) {
+  uint64_t tag = address >> (setIndexBit + blockOffsetBit);
+  unsigned int setIndex = address >> blockOffsetBit & ((1 << setIndexBit) - 1);
+
+  int evict = 0;
+  int empty = -1;
+  cacheData *cacheSet = cacheTable[setIndex];
+  for (int i = 0; i < linePerSet; i++) {
+    if (cacheSet[i].valid) {
+      if (cacheSet[i].tag == tag) {
+        hits++;
+        cacheSet[i].lru = 1;
+        return 0;
+      }
+      cacheSet[i].lru++;
+      if (cacheSet[evict].lru <= cacheSet[i].lru) {
+        evict = i;
+      }
+    } else
+      empty = i;
+  }
+  misses++;
+  if (empty != -1) {
+    cacheSet[empty].valid = 1;
+    cacheSet[empty].tag = tag;
+    cacheSet[empty].lru = 1;
+    return 1;
+  } else {
+    cacheSet[evict].tag = tag;
+    cacheSet[evict].lru = 1;
+    evictions++;
+    return 2;
+  }
+};
