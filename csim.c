@@ -32,6 +32,8 @@ void checkCache(uint64_t address);
 int main(int argc, char *argv[]) {
   parseArg(argc, argv);
   simulator();
+  printSummary(hits, misses, evictions);
+  return 0;
 }
 
 void parseArg(int argc, char *argv[]) {
@@ -122,3 +124,5 @@ int simulator(void) {
   fclose(traceFile);
   return 0;
 };
+
+void checkCache(uint64_t address) {}
