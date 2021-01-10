@@ -5,6 +5,14 @@
 #include <unistd.h>
 #include <getopt.h>
 
+typedef struct cacheData {
+    int validBit;
+    int tag;
+    int data;
+} cacheData;
+
+cacheData **cacheTable;
+
 bool verbose = false;
 int setIndexBit;
 int linePerSet;
@@ -16,6 +24,7 @@ void parseArg(int argc, char* argv[]);
 int main(int argc, char* argv[])
 {
     parseArg(argc, argv);
+
 }
 
 void parseArg(int argc, char* argv[]){
