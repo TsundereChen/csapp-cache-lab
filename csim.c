@@ -98,7 +98,6 @@ int simulator(void) {
   int size;
 
   while (fgets(buffer, sizeof(buffer), traceFile) != NULL) {
-    int returnValue;
     if (buffer[0] == 'I') {
       // Ignoring instruction load operation
       continue;
